@@ -1,7 +1,15 @@
 {
+	"Configs" : 
+	[
+		"Debug"
+	],
 	"InstallScripts" : 
 	[
-		"C:/Users/as042/OneDrive/Desktop/C++/project_root/build/cmake_install.cmake"
+		"C:/Users/owner/Desktop/C--/project_root/build/cmake_install.cmake",
+		"C:/Users/owner/Desktop/C--/project_root/build/common/cmake_install.cmake",
+		"C:/Users/owner/Desktop/C--/project_root/build/problems/quant/cmake_install.cmake",
+		"C:/Users/owner/Desktop/C--/project_root/build/problems/conv2d/cmake_install.cmake",
+		"C:/Users/owner/Desktop/C--/project_root/build/problems/memcpy_opt/cmake_install.cmake"
 	],
 	"Parallel" : false
 }

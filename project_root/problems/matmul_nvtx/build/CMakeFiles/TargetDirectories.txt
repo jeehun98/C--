@@ -1,0 +1,3 @@
+C:/Users/owner/Desktop/C--/project_root/problems/matmul_nvtx/build/CMakeFiles/matmul_nvtx.dir
+C:/Users/owner/Desktop/C--/project_root/problems/matmul_nvtx/build/CMakeFiles/edit_cache.dir
+C:/Users/owner/Desktop/C--/project_root/problems/matmul_nvtx/build/CMakeFiles/rebuild_cache.dir
