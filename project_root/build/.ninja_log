@@ -1,0 +1,12 @@
+# ninja log v5
+115	185	7841866268083834	problems/memcpy_opt/CMakeFiles/memcpy_opt.dir/Release/src/memcpy_opt.cpp.obj	88ec383ecbb38795
+107	301	7841866269239847	problems/conv2d/CMakeFiles/conv2d.dir/Release/src/conv.cpp.obj	55de3803a1fae5d9
+95	356	7841866269781433	problems/quant/CMakeFiles/quant.dir/Release/src/quant.cpp.obj	9d4665e05ccaeb04
+111	528	7841866271497315	problems/memcpy_opt/CMakeFiles/memcpy_opt.dir/Release/src/main.cpp.obj	3cbefe91b418e056
+89	552	7841866271756614	common/CMakeFiles/common.dir/Release/src/utils.cpp.obj	99be3b00ae60a3cb
+93	570	7841866271931996	problems/quant/CMakeFiles/quant.dir/Release/src/main.cpp.obj	7d844d4819045b25
+104	576	7841866271987269	problems/conv2d/CMakeFiles/conv2d.dir/Release/src/main.cpp.obj	5c1e6e2574cfe755
+553	593	7841866272144656	common/Release/common.lib	607828f7e39a7c0
+593	695	7841866273028929	problems/quant/Release/quant.exe	9fa1b2897c082172
+599	696	7841866273054552	problems/conv2d/Release/conv2d.exe	a4d8a570f1c98dea
+603	697	7841866273038930	problems/memcpy_opt/Release/memcpy_opt.exe	2c21a55e733e544d
