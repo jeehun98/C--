@@ -1,0 +1,32 @@
+# .gitignore (프로젝트 루트에 저장)
+# 빌드 아웃
+/build/
+/x64/
+/Debug/
+/Release/
+/CMakeFiles/
+/CMakeCache.txt
+/cmake_install.cmake
+/CPPPlayground.sln
+/ALL_BUILD.vcxproj
+/ZERO_CHECK.vcxproj
+/run.vcxproj
+
+# Visual Studio
+/.vs/
+/*.vcxproj.user
+
+# 바이너리/중간물
+*.exe
+*.dll
+*.pdb
+*.ilk
+*.tlog
+*.obj
+*.recipe
+*.lastbuildstate
+
+# 기타
+*.log
+
+# (원하면 유지) .vscode는 팀 설정 공유용으로 보존하는 편도 많습니다.
