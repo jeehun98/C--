@@ -1,17 +1,22 @@
-C/C++ 코딩 테스트 실험환경 문서
+🧭 C/C++ 코딩 테스트 실험환경 문서
 1) 프로젝트 개요
 
-목적: 여러 문제를 독립 실행 타겟으로 관리하면서, 공통 유틸을 공유 라이브러리로 재사용
+목적
+여러 문제를 독립 실행 타겟으로 관리하면서,
+공통 유틸을 공유 라이브러리(common) 로 재사용할 수 있도록 구성합니다.
 
-빌드 시스템: CMake (MSVC, Ninja, VS Code/Visual Studio 호환)
+빌드 시스템
+CMake (MSVC, Ninja, VS Code/Visual Studio 호환)
 
-장점:
+장점
 
-한 번의 CMake 구성 후 모든 문제를 일괄 빌드
+한 번의 CMake 구성 후 모든 문제를 일괄 빌드 가능
 
 공통 코드(common/)를 한 곳에서 유지, 중복 제거
 
-새 문제 추가가 폴더 추가 + 한 줄 등록으로 끝
+각 문제를 단독으로 빌드/실행할 수도 있음
+
+새 문제 추가 시 폴더 추가 + 한 줄 등록으로 확장
 
 2) 디렉터리 레이아웃
 project_root/
@@ -19,6 +24,7 @@ project_root/
 ├─ common/                       # 공통 유틸 라이브러리
 │  ├─ CMakeLists.txt
 │  ├─ include/common/utils.h
+│  ├─ include/common/timer.h
 │  └─ src/utils.cpp
 └─ problems/                     # 문제 모음(각각 독립 실행파일)
    ├─ quant/
@@ -34,12 +40,10 @@ project_root/
       ├─ include/memcpy_opt.h
       └─ src/{main.cpp, memcpy_opt.cpp}
 
-
-공통 타이머(common/include/common/timer.h)를 추가했다면 같은 규칙으로 공용 헤더에 둡니다.
-
 3) 루트 CMakeLists.txt의 역할
 
-전체 빌드의 총괄 관리자: 공통 컴파일 옵션/표준, 하위 디렉터리 등록, 타겟 간 의존 순서 관리
+전체 빌드의 총괄 관리자로서,
+공통 컴파일 옵션, 하위 디렉터리 등록, 타깃 의존 순서를 관리합니다.
 
 cmake_minimum_required(VERSION 3.24)
 project(CPP_MultiProblems LANGUAGES CXX)
@@ -49,52 +53,79 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if (MSVC)
-  add_compile_options(/W4 /utf-8)   # UTF-8 권장
+  add_compile_options(/W4 /utf-8 /MP)
 else()
   add_compile_options(-Wall -Wextra)
 endif()
 
-add_subdirectory(common)            # 공통 라이브러리
-add_subdirectory(problems/quant)    # 실행 타겟 1
-add_subdirectory(problems/conv2d)   # 실행 타겟 2
+# 하위 디렉터리 등록
+add_subdirectory(common)
+add_subdirectory(problems/quant)
+add_subdirectory(problems/conv2d)
 add_subdirectory(problems/memcpy_opt)
 
 
 핵심 포인트
 
-add_subdirectory(...) 로 하위 프로젝트를 하나의 빌드 그래프로 묶음
+add_subdirectory()로 하위 프로젝트를 하나의 빌드 그래프로 묶음
 
-한 번의 구성으로 전체 타겟 빌드 가능
+한 번의 구성으로 전체 타겟 일괄 빌드 가능
 
-공통 옵션/문자셋/최적화 등의 일괄 관리가 쉬움
+공통 옵션/문자셋/최적화 옵션을 루트에서 일괄 관리
 
 4) common/ (공통 유틸 라이브러리)
 
-역할: 여러 문제에서 재사용하는 코드(예: utils.h, timer.h 등)를 정적 라이브러리로 제공
-
-CMake
+역할
+여러 문제에서 재사용하는 코드(utils.h, timer.h 등)를
+정적 라이브러리(common)로 제공합니다.
 
 # common/CMakeLists.txt
 add_library(common STATIC
   src/utils.cpp
-  # src/timer.cpp  (필요 시)
 )
 target_include_directories(common PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
+# 헤더 온리용 인터페이스 타깃(선택)
+add_library(common_headers INTERFACE)
+target_include_directories(common_headers INTERFACE
+  ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
 
-사용 방법(문제 타겟에서):
+
+문제에서 사용
 
 #include "common/utils.h"
+#include "common/timer.h"
 
-target_link_libraries(타겟 PRIVATE common)
+target_link_libraries(quant PRIVATE common)
 
 5) 문제 폴더(서브프로젝트) CMake 패턴
 
-각 문제는 독립 실행 파일을 만든다.
+루트 빌드 & 독립 빌드를 모두 지원하는 통합 패턴
 
-# problems/<name>/CMakeLists.txt
+cmake_minimum_required(VERSION 3.24)
+
+# 1️⃣ 톱레벨(독립실행) 감지 시 프로젝트/옵션 자동 설정
+if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR OR PROJECT_IS_TOP_LEVEL)
+  project(<name> LANGUAGES CXX)
+  set(CMAKE_CXX_STANDARD 17)
+  set(CMAKE_CXX_STANDARD_REQUIRED ON)
+  if (MSVC)
+    add_compile_options(/W4 /utf-8 /MP)
+  else()
+    add_compile_options(-Wall -Wextra)
+  endif()
+
+  # 루트가 없을 경우 common 직접 등록
+  get_filename_component(PROJ_ROOT "${CMAKE_CURRENT_LIST_DIR}/../.." ABSOLUTE)
+  if (NOT TARGET common AND EXISTS "${PROJ_ROOT}/common/CMakeLists.txt")
+    add_subdirectory("${PROJ_ROOT}/common" "${CMAKE_BINARY_DIR}/_common_build")
+  endif()
+endif()
+
+# 2️⃣ 타깃 정의
 add_executable(<name>
   src/main.cpp
   src/<name>.cpp
@@ -102,46 +133,57 @@ add_executable(<name>
 target_include_directories(<name> PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
-target_link_libraries(<name> PRIVATE common)  # 공통 유틸 사용
+
+# 3️⃣ common이 있으면 링크, 없으면 패스
+if (TARGET common)
+  target_link_libraries(<name> PRIVATE common)
+elseif (TARGET common_headers)
+  target_link_libraries(<name> PRIVATE common_headers)
+endif()
 
 
-예: problems/quant/CMakeLists.txt에서 타겟 이름은 quant.
-빌드 후 실행 파일 위치(멀티 구성 제너레이터 기준):
-build/problems/quant/Release/quant.exe
+예:
+problems/quant/CMakeLists.txt에서 <name>을 quant로 변경.
+
+이 구조 덕분에:
+
+루트에서 전체 빌드 시 → 공통 common 사용
+
+개별 문제 폴더에서 직접 빌드 시 → 스스로 common을 등록해 빌드 가능
 
 6) 빌드 방법
-(권장) Ninja Multi-Config + MSVC
-# 최초 1회: 빌드 디렉터리 생성 및 구성
-mkdir build; cd build
+(1) 루트 전체 빌드 (권장)
+mkdir build && cd build
 cmake -G "Ninja Multi-Config" -S .. -B .
-
-# 빌드 (Release 권장)
 cmake --build . --config Release
 
-# 특정 타겟만 빌드
+(2) 특정 타깃만 빌드
 cmake --build . --config Release --target quant
 
-Visual Studio 2022 제너레이터
-mkdir build; cd build
-cmake -G "Visual Studio 17 2022" -A x64 -S .. -B .
+(3) 개별 문제 독립 빌드
+cd problems/quant
+mkdir build && cd build
+cmake -G "Ninja Multi-Config" -S .. -B .
 cmake --build . --config Release
 
-VS Code
+(4) Visual Studio 2022
+cmake -G "Visual Studio 17 2022" -A x64 -S .. -B build
+cmake --build build --config Release
+
+(5) VS Code
 
 확장: C/C++, CMake Tools
 
-좌하단 CMake: [Debug] → Release로 변경 → Build/Run
+좌하단 CMake: [Debug] → Release 변경 → Build/Run
 
-개별 타겟 선택해 실행 가능
+7) 실행 파일 위치
 
-7) 실행 위치
-
-Ninja/VS 공통(멀티 구성):
+멀티 구성 제너레이터 기준:
 
 build/problems/<problem_name>/Release/<problem_name>.exe
 
 
-예:
+예시:
 
 build/problems/quant/Release/quant.exe
 build/problems/conv2d/Release/conv2d.exe
@@ -149,7 +191,7 @@ build/problems/memcpy_opt/Release/memcpy_opt.exe
 
 8) 새 문제 추가 체크리스트
 
-디렉터리 생성
+1️⃣ 새 폴더 생성
 
 problems/new_task/
   ├─ CMakeLists.txt
@@ -157,18 +199,17 @@ problems/new_task/
   └─ src/{main.cpp, new_task.cpp}
 
 
-문제용 CMakeLists.txt 작성 (위 패턴 복붙 후 타겟명/파일명만 변경)
-
-루트 CMakeLists.txt 에 한 줄 추가
+2️⃣ CMakeLists 작성 (<name>만 변경)
+3️⃣ 루트 CMake에 등록
 
 add_subdirectory(problems/new_task)
 
 
-빌드
+4️⃣ 빌드
 
 cmake --build . --config Release --target new_task
 
-9) 공통 타이머 유틸 사용(예)
+9) 공통 타이머 유틸 사용 예시
 // common/include/common/timer.h
 #pragma once
 #include <chrono>
@@ -186,23 +227,21 @@ struct Timer {
 
 #include "common/timer.h"
 Timer tm; tm.tic();
-// ... 작업 ...
+// ...
 std::cout << "elapsed(ms): " << tm.toc_ms() << "\n";
 
-10) 문자셋/인코딩(경고 C4819) 가이드
+10) 문자셋/인코딩(C4819) 가이드
 
-원인: 소스가 CP949로 저장, MSVC가 UTF-8로 해석 못함
-
-해결(루트 CMake에 추가):
+원인: 소스가 CP949로 저장되어 있고, MSVC가 UTF-8로 인식하지 못함
+해결:
 
 if (MSVC)
   add_compile_options(/utf-8)
 endif()
 
 
-또는 파일을 UTF-8 (BOM 없이) 로 저장
-
-팀/프로젝트 레벨 권장: 루트에 .editorconfig
+또는 파일을 UTF-8 (BOM 없이) 로 저장.
+팀 레벨 설정(루트 .editorconfig):
 
 root = true
 [*.{h,hpp,c,cpp}]
@@ -211,10 +250,9 @@ end_of_line = crlf
 insert_final_newline = true
 
 11) 빌드 타입과 최적화
-
-Debug: 디버깅 심볼, 최적화 꺼짐
-
-Release: 최적화 켜짐(-O2//O2), 실측 성능은 이 모드에서 측정
+타입	설명
+Debug	디버깅 심볼 포함, 최적화 비활성
+Release	최적화 활성화(/O2, -O2), 성능 측정 시 사용
 
 명령 예:
 
@@ -222,24 +260,16 @@ cmake --build . --config Debug
 cmake --build . --config Release
 
 12) 트러블슈팅
+문제	원인/해결
+Cannot find source file 'src/utils.cpp'	common/src/utils.cpp 존재 확인 (경로 오타 자주 발생)
+MSBuild.exe 관련 에러	Visual Studio Build Tools 2022 설치, 제너레이터 "Visual Studio 17 2022" 또는 "Ninja Multi-Config" 지정
+한글/공백 경로	터미널에서 경로를 따옴표로 감싸기: cd "C:\Users\owner\Desktop\C--\project_root\build"
+13) 구조 설계 요약
 
-❌ Cannot find source file 'src/utils.cpp'
-→ common/src/utils.cpp 파일 존재 여부/경로 확인. 폴더를 잘못 만들거나 타이핑 오타가 흔함.
+루트 CMake는 전체 타깃을 통합 관리 → 한 번에 구성/빌드/테스트 가능
 
-❌ MSBuild.exe 관련 에러, VCTargetsPath 없음
-→ Visual Studio Build Tools 2022 설치 + 제너레이터를 "Visual Studio 17 2022" 또는 "Ninja Multi-Config"로 지정.
+각 문제는 공통 코드(common) 에 선택적으로 의존
 
-❌ 한글/특수문자 경로 문제
-→ 공백/한글 경로도 동작하지만, 터미널에서는 경로를 따옴표로 감싸는 습관 권장:
+문제 폴더는 독립 실행도 가능, 전체 프로젝트 빌드에도 포함됨
 
-cd "C:\Users\owner\Desktop\C--\project_root\build"
-
-13) 이 구조를 쓰는 이유(요약)
-
-루트 CMake가 전체 타겟을 통합 관리 → 한 번에 구성/빌드/테스트
-
-common 정적 라이브러리로 공통 코드 재사용 → 중복 제거, 유지보수 용이
-
-문제 폴더는 독립 실행이면서 의존/포함 경로가 자동 관리
-
-새로운 문제/모듈을 쉽게 확장할 수 있는 표준적인 CMake 패턴
+확장성, 유지보수성, 재사용성을 모두 갖춘 표준형 CMake 구조
